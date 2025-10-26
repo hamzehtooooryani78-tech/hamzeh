@@ -1,0 +1,84 @@
+/* scripts.js — منو، فرم و اسلایدر ساده */
+document.addEventListener('DOMContentLoaded', function(){
+  // header nav toggle
+  const navToggle = document.querySelector('.nav-toggle');
+  const mainNav = document.querySelector('.main-nav');
+  navToggle && navToggle.addEventListener('click', () => {
+    const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+    navToggle.setAttribute('aria-expanded', String(!expanded));
+    mainNav.style.display = expanded ? 'none' : 'flex';
+  });
+
+  // current year in footer
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // simple carousel behaviour
+  const track = document.querySelector('.carousel-track');
+  if (track){
+    const prev = document.querySelector('.carousel-btn.prev');
+    const next = document.querySelector('.carousel-btn.next');
+    const items = track.children;
+    let index = 0;
+
+    function update(){
+      const w = items[0].getBoundingClientRect().width + parseFloat(getComputedStyle(track).gap || 16);
+      track.style.transform = translateX(-${index * w}px);
+    }
+
+    window.addEventListener('resize', update);
+    prev && prev.addEventListener('click', () => {
+      index = Math.max(0, index - 1);
+      update();
+    });
+    next && next.addEventListener('click', () => {
+      index = Math.min(items.length - 1, index + 1);
+      update();
+    });
+    // auto-advance (gentle)
+    setInterval(() => {
+      index = (index + 1) % items.length;
+      update();
+    }, 5000);
+    // init
+    setTimeout(update, 50);
+  }
+
+  // contact form validation + fake submit (mailto fallback)
+  const form = document.getElementById('contactForm');
+  const formNote = document.getElementById('formNote');
+  if (form){
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = form.name.value.trim();
+      const phone = form.phone.value.trim();
+      const message = form.message.value.trim();
+
+      if (!name || !phone) {
+        formNote.textContent = 'لطفاً نام و شماره تماس خود را وارد کنید.';
+        formNote.style.color = '#ffdd57';
+        return;
+      }
+
+      // basic phone pattern (iran)
+      const phonePattern = /^(0)?9\d{9}$/;
+      const plainPhone = phone.replace(/\s|-/g,'').replace(/^\+98/,'0');
+      if (!phonePattern.test(plainPhone)) {
+        formNote.textContent = 'فرمت شماره تماس صحیح نیست (مثال: ۰۹۱۲۱۲۳۴۵۶۷).';
+        formNote.style.color = '#ffdd57';
+        return;
+      }
+
+      // simulate sending — since no backend, open mailto with prefilled content
+      const subject = encodeURIComponent(`درخواست تعمیر از ${name}`);
+      const body = encodeURIComponent(`نام: ${name}\nتلفن: ${phone}\nپیام: ${message}`);
+      const mailto = mailto:info@example.com?subject=${subject}&body=${body};
+      // open mail client in new tab
+      window.open(mailto, '_blank');
+
+      formNote.textContent = 'درخواست ارسال شد — لطفاً ایمیل یا واتس‌اپ ما را برای پیگیری چک کنید.';
+      formNote.style.color = 'lightgreen';
+      form.reset();
+    });
+  }
+});
